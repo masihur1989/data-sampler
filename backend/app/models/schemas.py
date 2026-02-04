@@ -1,3 +1,16 @@
+"""
+Pydantic Schemas Module
+
+This module defines all Pydantic models used for request/response validation
+and serialization throughout the Data Sampler API.
+
+Models are organized into categories:
+    - Enums: SamplingMethod, ExportFormat
+    - Metadata: FileMetadata, SamplingResult
+    - Configs: SamplingConfig, ExportConfig
+    - Responses: FileUploadResponse, SampleResponse, ErrorResponse, StreamChunk
+"""
+
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
 from enum import Enum
@@ -5,6 +18,16 @@ from datetime import datetime
 
 
 class SamplingMethod(str, Enum):
+    """
+    Enumeration of available sampling methods.
+    
+    Values:
+        RANDOM: Simple random sampling using reservoir algorithm
+        STRATIFIED: Proportional sampling from each stratum
+        SYSTEMATIC: Every nth record after random start
+        CLUSTER: Random cluster selection with all members
+        WEIGHTED: Probability-based sampling using weights
+    """
     RANDOM = "random"
     STRATIFIED = "stratified"
     SYSTEMATIC = "systematic"
@@ -13,6 +36,12 @@ class SamplingMethod(str, Enum):
 
 
 class FileMetadata(BaseModel):
+    """
+    Metadata for an uploaded file.
+    
+    Stores information about the file including its location, size,
+    and Excel-specific details like row/column counts and sheet names.
+    """
     file_id: str
     original_filename: str
     file_size: int
@@ -25,6 +54,12 @@ class FileMetadata(BaseModel):
 
 
 class SamplingConfig(BaseModel):
+    """
+    Configuration for a sampling operation.
+    
+    Specifies the sampling method, sample size, and method-specific
+    parameters like strata column, weight column, etc.
+    """
     file_id: str
     method: SamplingMethod = SamplingMethod.RANDOM
     sample_size: int = Field(..., gt=0, description="Number of rows to sample")
@@ -39,6 +74,7 @@ class SamplingConfig(BaseModel):
 
 
 class SamplingResult(BaseModel):
+    """Result of a sampling operation with metadata and statistics."""
     sample_id: str
     file_id: str
     method: SamplingMethod
@@ -50,17 +86,20 @@ class SamplingResult(BaseModel):
 
 
 class ExportFormat(str, Enum):
+    """Supported export formats for sampled data."""
     XLSX = "xlsx"
     CSV = "csv"
     JSON = "json"
 
 
 class ExportConfig(BaseModel):
+    """Configuration for exporting sampled data."""
     sample_id: str
     format: ExportFormat = ExportFormat.XLSX
 
 
 class FileUploadResponse(BaseModel):
+    """Response returned after successful file upload."""
     file_id: str
     filename: str
     size: int
@@ -71,6 +110,7 @@ class FileUploadResponse(BaseModel):
 
 
 class SampleResponse(BaseModel):
+    """Response returned after successful sampling operation."""
     sample_id: str
     method: str
     original_rows: int
@@ -81,11 +121,13 @@ class SampleResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
+    """Standard error response format."""
     error: str
     detail: Optional[str] = None
 
 
 class StreamChunk(BaseModel):
+    """Chunk of data for streaming responses."""
     chunk_index: int
     total_chunks: int
     rows: list[dict]

@@ -1,3 +1,23 @@
+"""
+Export Router
+
+This module provides API endpoints for exporting sampled data to various formats.
+Supports both file download and streaming export for large datasets.
+
+Supported Formats:
+    - XLSX: Excel spreadsheet (default)
+    - CSV: Comma-separated values
+    - JSON: JSON array of records
+
+Endpoints:
+    GET /api/export/{sample_id} - Download sample as file
+    GET /api/export/{sample_id}/stream/csv - Stream as CSV
+    GET /api/export/{sample_id}/stream/json - Stream as NDJSON
+
+Streaming exports are useful for large samples where generating the entire
+file at once would consume too much memory.
+"""
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pathlib import Path
@@ -14,6 +34,20 @@ router = APIRouter(prefix="/api/export", tags=["export"])
     responses={404: {"model": ErrorResponse}},
 )
 async def export_sample(sample_id: str, format: str = "xlsx"):
+    """
+    Export a sample as a downloadable file.
+    
+    Args:
+        sample_id: Unique identifier of the sample
+        format: Output format - xlsx, csv, or json (default: xlsx)
+        
+    Returns:
+        FileResponse with the exported file for download.
+        
+    Raises:
+        HTTPException 400: Invalid format specified
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Sample not found")
@@ -43,6 +77,21 @@ async def export_sample(sample_id: str, format: str = "xlsx"):
 
 @router.get("/{sample_id}/stream/csv")
 async def stream_csv(sample_id: str, chunk_size: int = 1000):
+    """
+    Stream sample data as CSV.
+    
+    Generates CSV output in chunks for memory-efficient export of large samples.
+    
+    Args:
+        sample_id: Unique identifier of the sample
+        chunk_size: Number of rows per chunk (default: 1000)
+        
+    Returns:
+        StreamingResponse with CSV content and download headers.
+        
+    Raises:
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Sample not found")
@@ -58,6 +107,22 @@ async def stream_csv(sample_id: str, chunk_size: int = 1000):
 
 @router.get("/{sample_id}/stream/json")
 async def stream_json(sample_id: str, chunk_size: int = 1000):
+    """
+    Stream sample data as newline-delimited JSON (NDJSON).
+    
+    Each line contains one JSON object representing a row. This format is
+    ideal for streaming large datasets as it can be parsed incrementally.
+    
+    Args:
+        sample_id: Unique identifier of the sample
+        chunk_size: Number of rows per chunk (default: 1000)
+        
+    Returns:
+        StreamingResponse with NDJSON content and download headers.
+        
+    Raises:
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Sample not found")
