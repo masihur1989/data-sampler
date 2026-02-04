@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import upload, sample, export, archive
+from app.routers import upload, sample, export, archive, preprocess
 
 app = FastAPI(
     title="Data Sampler API",
@@ -18,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(upload.router)
+app.include_router(preprocess.router)
 app.include_router(sample.router)
 app.include_router(export.router)
 app.include_router(archive.router)
@@ -36,6 +37,7 @@ async def root():
         "docs": "/docs",
         "endpoints": {
             "upload": "/api/upload",
+            "preprocess": "/api/preprocess",
             "sample": "/api/sample",
             "export": "/api/export",
             "archive": "/api/archive",
