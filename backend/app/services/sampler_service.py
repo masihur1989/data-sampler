@@ -1,3 +1,18 @@
+"""
+Sampling Service Module
+
+This module provides various statistical sampling algorithms optimized for large datasets.
+It implements memory-efficient sampling using reservoir sampling and streaming techniques
+to handle Excel files up to 150MB without loading the entire file into memory.
+
+Sampling Methods:
+- Random: Uses reservoir sampling algorithm (O(n) time, O(k) space)
+- Stratified: Two-pass approach for proportional sampling from each stratum
+- Systematic: Selects every nth record after a random starting point
+- Cluster: Randomly selects clusters and includes all members
+- Weighted: Probability-based sampling using weight column values
+"""
+
 import random
 from typing import Optional, Iterator
 import numpy as np
@@ -10,48 +25,115 @@ from app.config import EXCEL_CHUNK_SIZE
 
 
 class ReservoirSampler:
+    """
+    Implements the Reservoir Sampling algorithm (Algorithm R by Vitter).
+    
+    This algorithm allows sampling k items from a stream of unknown size n
+    in a single pass with O(n) time complexity and O(k) space complexity.
+    Each item has an equal probability (k/n) of being selected.
+    
+    How it works:
+    1. Fill the reservoir with the first k items
+    2. For each subsequent item i (where i > k):
+       - Generate a random number j between 0 and i-1
+       - If j < k, replace reservoir[j] with the current item
+    
+    This ensures each item has exactly k/n probability of being in the final sample.
+    """
+    
     def __init__(self, sample_size: int, seed: Optional[int] = None):
+        """
+        Initialize the reservoir sampler.
+        
+        Args:
+            sample_size: Number of items to sample (k)
+            seed: Optional random seed for reproducibility
+        """
         self.sample_size = sample_size
         self.reservoir: list[tuple[int, list]] = []
         self.count = 0
         self.rng = random.Random(seed)
 
-    def add(self, index: int, row: list):
+    def add(self, index: int, row: list) -> None:
+        """
+        Add an item to the sampling process.
+        
+        Args:
+            index: Original row index in the dataset
+            row: Row data as a list
+        """
         self.count += 1
+        
+        # Phase 1: Fill the reservoir with first k items
         if len(self.reservoir) < self.sample_size:
             self.reservoir.append((index, row))
         else:
+            # Phase 2: Randomly replace items with decreasing probability
             j = self.rng.randint(0, self.count - 1)
             if j < self.sample_size:
                 self.reservoir[j] = (index, row)
 
     def get_sample(self) -> list[tuple[int, list]]:
+        """
+        Get the final sample, sorted by original index.
+        
+        Returns:
+            List of (index, row_data) tuples sorted by index
+        """
         return sorted(self.reservoir, key=lambda x: x[0])
 
 
 class StratifiedReservoirSampler:
+    """
+    Implements stratified sampling using reservoir sampling for each stratum.
+    
+    Stratified sampling ensures proportional representation from each group (stratum)
+    in the population. This implementation uses a two-pass approach:
+    
+    Pass 1: Count items in each stratum to calculate proportions
+    Pass 2: Apply reservoir sampling to each stratum with proportional sample sizes
+    
+    This ensures that if a stratum contains 30% of the population, it will
+    contribute approximately 30% of the sample.
+    """
+    
     def __init__(self, sample_size: int, seed: Optional[int] = None):
+        """
+        Initialize the stratified sampler.
+        
+        Args:
+            sample_size: Total number of items to sample across all strata
+            seed: Optional random seed for reproducibility
+        """
         self.sample_size = sample_size
         self.seed = seed
         self.strata_counts: dict[str, int] = {}
         self.strata_reservoirs: dict[str, ReservoirSampler] = {}
         self.total_count = 0
 
-    def count_stratum(self, stratum: str):
+    def count_stratum(self, stratum: str) -> None:
+        """Count an item in a stratum (used in first pass)."""
         self.strata_counts[stratum] = self.strata_counts.get(stratum, 0) + 1
         self.total_count += 1
 
-    def initialize_reservoirs(self):
+    def initialize_reservoirs(self) -> None:
+        """
+        Initialize reservoir samplers for each stratum based on proportions.
+        Must be called after the first pass (counting) is complete.
+        """
         for stratum, count in self.strata_counts.items():
+            # Calculate proportional sample size for this stratum
             proportion = count / self.total_count
             stratum_sample_size = max(1, int(self.sample_size * proportion))
             self.strata_reservoirs[stratum] = ReservoirSampler(stratum_sample_size, self.seed)
 
-    def add(self, stratum: str, index: int, row: list):
+    def add(self, stratum: str, index: int, row: list) -> None:
+        """Add an item to its stratum's reservoir (used in second pass)."""
         if stratum in self.strata_reservoirs:
             self.strata_reservoirs[stratum].add(index, row)
 
     def get_sample(self) -> list[tuple[int, list]]:
+        """Get the combined sample from all strata, sorted by original index."""
         result = []
         for reservoir in self.strata_reservoirs.values():
             result.extend(reservoir.get_sample())
