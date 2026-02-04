@@ -1,3 +1,26 @@
+"""
+Sampling Router
+
+This module provides API endpoints for creating and managing data samples.
+It supports five sampling methods optimized for large datasets:
+
+Sampling Methods:
+    - Random: Reservoir sampling algorithm (O(n) time, O(k) space)
+    - Stratified: Two-pass proportional sampling from each stratum
+    - Systematic: Every nth record after random starting point
+    - Cluster: Random cluster selection with all members included
+    - Weighted: Probability-based sampling using weight column
+
+Endpoints:
+    POST /api/sample - Create a new sample from uploaded file
+    GET /api/sample/{sample_id} - Get sample metadata and preview
+    GET /api/sample/{sample_id}/stream - Stream sample data via SSE
+    GET /api/sample/{sample_id}/all - Get all sample data at once
+
+The sampling process is memory-efficient and can handle files up to 150MB
+without loading the entire file into memory.
+"""
+
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, HTTPException
@@ -18,6 +41,24 @@ router = APIRouter(prefix="/api/sample", tags=["sample"])
     responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
 )
 async def create_sample(config: SamplingConfig):
+    """
+    Create a sample from an uploaded file.
+    
+    Applies the specified sampling method to extract a representative subset
+    of the data. The sample is stored and can be retrieved or exported later.
+    
+    Args:
+        config: SamplingConfig with method, sample_size, and method-specific
+                parameters (strata_column, weight_column, cluster_column, etc.)
+        
+    Returns:
+        SampleResponse with sample_id, statistics, column info, and preview data.
+        
+    Raises:
+        HTTPException 400: Invalid configuration or missing required parameters
+        HTTPException 404: Source file not found
+        HTTPException 500: Sampling failed
+    """
     file_path = file_service.get_file_path(config.file_id)
     if not file_path or not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
@@ -53,6 +94,19 @@ async def create_sample(config: SamplingConfig):
 
 @router.get("/{sample_id}")
 async def get_sample(sample_id: str):
+    """
+    Get metadata and preview for a sample.
+    
+    Args:
+        sample_id: Unique identifier returned from create_sample
+        
+    Returns:
+        Sample metadata including row count, columns, preview (first 100 rows),
+        and the original sampling configuration.
+        
+    Raises:
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     metadata = sampler_service.get_sample_metadata(sample_id)
 
@@ -73,6 +127,23 @@ async def get_sample(sample_id: str):
 
 @router.get("/{sample_id}/stream")
 async def stream_sample(sample_id: str, chunk_size: int = 1000):
+    """
+    Stream sample data using Server-Sent Events (SSE).
+    
+    Useful for large samples where loading all data at once is impractical.
+    Data is sent in chunks, each containing a configurable number of rows.
+    
+    Args:
+        sample_id: Unique identifier of the sample
+        chunk_size: Number of rows per chunk (default: 1000)
+        
+    Returns:
+        StreamingResponse with SSE events containing chunked data.
+        Each event includes chunk_index, total_chunks, rows, and is_last flag.
+        
+    Raises:
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Sample not found")
@@ -102,6 +173,21 @@ async def stream_sample(sample_id: str, chunk_size: int = 1000):
 
 @router.get("/{sample_id}/all")
 async def get_all_sample_data(sample_id: str):
+    """
+    Get all sample data at once.
+    
+    Returns the complete sample data in a single response. For large samples,
+    consider using the /stream endpoint instead.
+    
+    Args:
+        sample_id: Unique identifier of the sample
+        
+    Returns:
+        Complete sample data with row count, columns, and all rows.
+        
+    Raises:
+        HTTPException 404: Sample not found
+    """
     df = sampler_service.get_sample(sample_id)
     if df is None:
         raise HTTPException(status_code=404, detail="Sample not found")

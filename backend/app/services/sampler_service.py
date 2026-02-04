@@ -141,7 +141,19 @@ class StratifiedReservoirSampler:
 
 
 class SamplerService:
+    """
+    Service for sampling data from Excel files using various algorithms.
+    
+    This service provides a unified interface for all sampling methods and
+    manages the storage of sampled data for later retrieval and export.
+    
+    Attributes:
+        _sample_store: In-memory storage for sampled DataFrames
+        _sample_metadata: Metadata about each sample (config, statistics)
+    """
+    
     def __init__(self):
+        """Initialize the sampler service with empty stores."""
         self._sample_store: dict[str, pd.DataFrame] = {}
         self._sample_metadata: dict[str, dict] = {}
 
@@ -153,6 +165,19 @@ class SamplerService:
         with_replacement: bool = False,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Perform random sampling using reservoir sampling algorithm.
+        
+        Args:
+            parser: ExcelParser instance for the source file
+            sample_size: Number of rows to sample
+            seed: Random seed for reproducibility
+            with_replacement: Not used (reservoir sampling is without replacement)
+            sheet_name: Sheet to sample from
+            
+        Returns:
+            DataFrame containing the sampled rows
+        """
         sampler = ReservoirSampler(sample_size, seed)
         columns = None
 
@@ -177,6 +202,25 @@ class SamplerService:
         seed: Optional[int] = None,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Perform stratified sampling with proportional representation.
+        
+        Uses a two-pass approach: first counts items per stratum, then
+        samples proportionally from each stratum.
+        
+        Args:
+            parser: ExcelParser instance for the source file
+            sample_size: Total number of rows to sample
+            strata_column: Column name to stratify by
+            seed: Random seed for reproducibility
+            sheet_name: Sheet to sample from
+            
+        Returns:
+            DataFrame containing proportionally sampled rows from each stratum
+            
+        Raises:
+            ValueError: If strata_column is not found in the data
+        """
         sampler = StratifiedReservoirSampler(sample_size, seed)
         columns = None
         strata_col_idx = None
@@ -215,6 +259,22 @@ class SamplerService:
         seed: Optional[int] = None,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Perform systematic sampling (every nth record).
+        
+        Selects every kth record after a random starting point, where
+        k = total_rows / sample_size. This provides even coverage across
+        the dataset.
+        
+        Args:
+            parser: ExcelParser instance for the source file
+            sample_size: Number of rows to sample
+            seed: Random seed for reproducibility
+            sheet_name: Sheet to sample from
+            
+        Returns:
+            DataFrame containing systematically sampled rows
+        """
         total_rows = parser.get_row_count(sheet_name)
         if total_rows == 0:
             return pd.DataFrame()
@@ -250,6 +310,25 @@ class SamplerService:
         seed: Optional[int] = None,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Perform cluster sampling.
+        
+        Randomly selects clusters and includes all members of selected clusters
+        until the sample size is reached.
+        
+        Args:
+            parser: ExcelParser instance for the source file
+            sample_size: Maximum number of rows to sample
+            cluster_column: Column name defining clusters
+            seed: Random seed for reproducibility
+            sheet_name: Sheet to sample from
+            
+        Returns:
+            DataFrame containing all rows from selected clusters
+            
+        Raises:
+            ValueError: If cluster_column is not found in the data
+        """
         columns = None
         cluster_col_idx = None
         clusters: dict[str, list[list]] = {}
@@ -288,6 +367,26 @@ class SamplerService:
         with_replacement: bool = False,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
+        """
+        Perform weighted sampling based on a weight column.
+        
+        Items with higher weights have proportionally higher probability
+        of being selected. Negative weights are treated as zero.
+        
+        Args:
+            parser: ExcelParser instance for the source file
+            sample_size: Number of rows to sample
+            weight_column: Column name containing weights
+            seed: Random seed for reproducibility
+            with_replacement: Whether to sample with replacement
+            sheet_name: Sheet to sample from
+            
+        Returns:
+            DataFrame containing weighted sampled rows
+            
+        Raises:
+            ValueError: If weight_column is not found in the data
+        """
         columns = None
         weight_col_idx = None
         all_rows: list[list] = []
@@ -330,6 +429,23 @@ class SamplerService:
         return pd.DataFrame(sampled_rows, columns=columns)
 
     def sample(self, file_path: Path, config: SamplingConfig) -> tuple[pd.DataFrame, dict]:
+        """
+        Sample data from a file using the specified configuration.
+        
+        This is the main entry point for sampling. It determines the appropriate
+        sampling method based on the config and returns both the sampled data
+        and statistics about the sampling operation.
+        
+        Args:
+            file_path: Path to the Excel file
+            config: SamplingConfig with method, sample_size, and parameters
+            
+        Returns:
+            Tuple of (sampled DataFrame, statistics dict)
+            
+        Raises:
+            ValueError: If required parameters are missing for the method
+        """
         parser = ExcelParser(file_path)
         file_info = parser.get_file_info(config.sheet_name)
 
@@ -377,16 +493,36 @@ class SamplerService:
         return df, statistics
 
     def store_sample(self, sample_id: str, df: pd.DataFrame, metadata: dict):
+        """
+        Store a sample for later retrieval.
+        
+        Args:
+            sample_id: Unique identifier for the sample
+            df: Sampled DataFrame
+            metadata: Metadata about the sample (config, statistics, etc.)
+        """
         self._sample_store[sample_id] = df
         self._sample_metadata[sample_id] = metadata
 
     def get_sample(self, sample_id: str) -> Optional[pd.DataFrame]:
+        """Get a stored sample by ID."""
         return self._sample_store.get(sample_id)
 
     def get_sample_metadata(self, sample_id: str) -> Optional[dict]:
+        """Get metadata for a stored sample."""
         return self._sample_metadata.get(sample_id)
 
     def iter_sample_chunks(self, sample_id: str, chunk_size: int = 1000) -> Iterator[pd.DataFrame]:
+        """
+        Iterate over a sample in chunks for streaming.
+        
+        Args:
+            sample_id: Unique identifier of the sample
+            chunk_size: Number of rows per chunk
+            
+        Yields:
+            DataFrame chunks of the specified size
+        """
         df = self._sample_store.get(sample_id)
         if df is None:
             return

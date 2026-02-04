@@ -2,25 +2,39 @@
 Pre-processing Service Module
 
 This module provides data pre-processing capabilities for raw Excel files before sampling.
-It includes data cleaning, validation, transformation, and quality reporting features.
+It manages the pre-processing pipeline and stores processed data for subsequent sampling.
+
+The actual transformation logic is delegated to pure functions in preprocessing_utils.py,
+making the transformations easier to test and reuse independently.
 
 Pre-processing Steps:
 1. Data Cleaning: Remove duplicates, handle missing values, trim whitespace
 2. Data Validation: Check data types, validate ranges, detect anomalies
 3. Data Transformation: Type conversion, normalization, filtering
 4. Quality Report: Generate statistics about data quality
-
-The pre-processing pipeline is configurable and can be customized per file.
 """
 
 import uuid
+import time
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
 import pandas as pd
-import numpy as np
 
 from app.config import UPLOAD_DIR
+from app.utils.preprocessing_utils import (
+    analyze_data as _analyze_data,
+    remove_duplicates as _remove_duplicates,
+    handle_missing_values as _handle_missing_values,
+    trim_whitespace as _trim_whitespace,
+    remove_empty_rows as _remove_empty_rows,
+    remove_empty_columns as _remove_empty_columns,
+    convert_types as _convert_types,
+    normalize_columns as _normalize_columns,
+    filter_data as _filter_data,
+    select_columns as _select_columns,
+    generate_column_stats as _generate_column_stats,
+)
 
 
 class PreprocessingConfig:
@@ -130,204 +144,15 @@ class PreprocessingService:
         """
         Analyze data and generate statistics without modifying it.
         
+        Delegates to the pure analyze_data function from preprocessing_utils.
+        
         Args:
             df: DataFrame to analyze
             
         Returns:
             Dictionary with analysis results
         """
-        analysis = {
-            "row_count": len(df),
-            "column_count": len(df.columns),
-            "columns": list(df.columns),
-            "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
-            "missing_values": df.isnull().sum().to_dict(),
-            "missing_percentage": (df.isnull().sum() / len(df) * 100).round(2).to_dict(),
-            "duplicate_rows": df.duplicated().sum(),
-            "memory_usage_mb": round(df.memory_usage(deep=True).sum() / (1024 * 1024), 2),
-        }
-        
-        # Add numeric column statistics
-        numeric_cols = df.select_dtypes(include=[np.number]).columns
-        if len(numeric_cols) > 0:
-            analysis["numeric_stats"] = df[numeric_cols].describe().to_dict()
-        
-        # Add categorical column statistics
-        categorical_cols = df.select_dtypes(include=['object', 'category']).columns
-        if len(categorical_cols) > 0:
-            analysis["categorical_stats"] = {}
-            for col in categorical_cols:
-                analysis["categorical_stats"][col] = {
-                    "unique_values": df[col].nunique(),
-                    "top_values": df[col].value_counts().head(5).to_dict(),
-                }
-        
-        return analysis
-    
-    def _remove_duplicates(self, df: pd.DataFrame, report: QualityReport) -> pd.DataFrame:
-        """Remove duplicate rows."""
-        original_count = len(df)
-        df = df.drop_duplicates()
-        report.duplicates_removed = original_count - len(df)
-        return df
-    
-    def _handle_missing_values(
-        self, df: pd.DataFrame, strategy: str, fill_value: Optional[str], report: QualityReport
-    ) -> pd.DataFrame:
-        """Handle missing values based on strategy."""
-        missing_count = df.isnull().sum().sum()
-        
-        if strategy == "keep":
-            pass  # Do nothing
-        elif strategy == "drop":
-            df = df.dropna()
-        elif strategy == "fill_mean":
-            numeric_cols = df.select_dtypes(include=[np.number]).columns
-            df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-        elif strategy == "fill_median":
-            numeric_cols = df.select_dtypes(include=[np.number]).columns
-            df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
-        elif strategy == "fill_mode":
-            for col in df.columns:
-                mode_val = df[col].mode()
-                if len(mode_val) > 0:
-                    df[col] = df[col].fillna(mode_val[0])
-        elif strategy == "fill_value" and fill_value is not None:
-            df = df.fillna(fill_value)
-        
-        report.missing_values_handled = missing_count - df.isnull().sum().sum()
-        return df
-    
-    def _trim_whitespace(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Trim whitespace from string columns."""
-        string_cols = df.select_dtypes(include=['object']).columns
-        for col in string_cols:
-            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)
-        return df
-    
-    def _remove_empty_rows(self, df: pd.DataFrame, report: QualityReport) -> pd.DataFrame:
-        """Remove rows where all values are empty/null."""
-        original_count = len(df)
-        df = df.dropna(how='all')
-        report.empty_rows_removed = original_count - len(df)
-        return df
-    
-    def _remove_empty_columns(self, df: pd.DataFrame, report: QualityReport) -> pd.DataFrame:
-        """Remove columns where all values are empty/null."""
-        empty_cols = df.columns[df.isnull().all()].tolist()
-        df = df.dropna(axis=1, how='all')
-        report.empty_columns_removed = len(empty_cols)
-        report.columns_dropped.extend(empty_cols)
-        return df
-    
-    def _convert_types(self, df: pd.DataFrame, report: QualityReport) -> pd.DataFrame:
-        """Attempt to convert string columns to numeric types."""
-        for col in df.select_dtypes(include=['object']).columns:
-            try:
-                # Try to convert to numeric
-                converted = pd.to_numeric(df[col], errors='coerce')
-                # Only convert if most values are valid numbers
-                if converted.notna().sum() / len(converted) > 0.5:
-                    df[col] = converted
-                    report.type_conversions[col] = "numeric"
-            except (ValueError, TypeError):
-                pass
-        return df
-    
-    def _normalize_columns(self, df: pd.DataFrame, columns: list[str], report: QualityReport) -> pd.DataFrame:
-        """Normalize specified columns to 0-1 scale."""
-        for col in columns:
-            if col in df.columns and df[col].dtype in [np.float64, np.int64, float, int]:
-                min_val = df[col].min()
-                max_val = df[col].max()
-                if max_val > min_val:
-                    df[col] = (df[col] - min_val) / (max_val - min_val)
-                    report.type_conversions[col] = f"normalized (min={min_val}, max={max_val})"
-        return df
-    
-    def _filter_data(self, df: pd.DataFrame, conditions: dict, report: QualityReport) -> pd.DataFrame:
-        """
-        Filter data based on conditions.
-        
-        Conditions format:
-        {
-            "column_name": {"op": "gt", "value": 10},  # greater than
-            "column_name": {"op": "eq", "value": "A"},  # equals
-            "column_name": {"op": "in", "value": ["A", "B"]},  # in list
-        }
-        """
-        original_count = len(df)
-        
-        for col, condition in conditions.items():
-            if col not in df.columns:
-                report.warnings.append(f"Filter column '{col}' not found")
-                continue
-            
-            op = condition.get("op", "eq")
-            value = condition.get("value")
-            
-            if op == "eq":
-                df = df[df[col] == value]
-            elif op == "ne":
-                df = df[df[col] != value]
-            elif op == "gt":
-                df = df[df[col] > value]
-            elif op == "gte":
-                df = df[df[col] >= value]
-            elif op == "lt":
-                df = df[df[col] < value]
-            elif op == "lte":
-                df = df[df[col] <= value]
-            elif op == "in":
-                df = df[df[col].isin(value)]
-            elif op == "not_in":
-                df = df[~df[col].isin(value)]
-            elif op == "contains":
-                df = df[df[col].astype(str).str.contains(str(value), na=False)]
-        
-        filtered_count = original_count - len(df)
-        if filtered_count > 0:
-            report.warnings.append(f"Filtered out {filtered_count} rows based on conditions")
-        
-        return df
-    
-    def _select_columns(
-        self, df: pd.DataFrame, keep: Optional[list[str]], drop: list[str], report: QualityReport
-    ) -> pd.DataFrame:
-        """Select or drop columns."""
-        if keep:
-            missing_cols = [c for c in keep if c not in df.columns]
-            if missing_cols:
-                report.warnings.append(f"Columns not found: {missing_cols}")
-            keep = [c for c in keep if c in df.columns]
-            df = df[keep]
-        
-        for col in drop:
-            if col in df.columns:
-                df = df.drop(columns=[col])
-                report.columns_dropped.append(col)
-        
-        return df
-    
-    def _generate_column_stats(self, df: pd.DataFrame, report: QualityReport) -> None:
-        """Generate statistics for each column."""
-        for col in df.columns:
-            stats = {
-                "dtype": str(df[col].dtype),
-                "non_null_count": df[col].notna().sum(),
-                "null_count": df[col].isnull().sum(),
-                "unique_count": df[col].nunique(),
-            }
-            
-            if df[col].dtype in [np.float64, np.int64, float, int]:
-                stats.update({
-                    "min": float(df[col].min()) if pd.notna(df[col].min()) else None,
-                    "max": float(df[col].max()) if pd.notna(df[col].max()) else None,
-                    "mean": float(df[col].mean()) if pd.notna(df[col].mean()) else None,
-                    "std": float(df[col].std()) if pd.notna(df[col].std()) else None,
-                })
-            
-            report.column_stats[col] = stats
+        return _analyze_data(df)
     
     def preprocess(
         self,
@@ -337,6 +162,9 @@ class PreprocessingService:
         """
         Pre-process a DataFrame according to the configuration.
         
+        Uses pure transformation functions from preprocessing_utils.py
+        and aggregates results into a QualityReport.
+        
         Args:
             df: Input DataFrame
             config: Pre-processing configuration (uses defaults if not provided)
@@ -344,7 +172,6 @@ class PreprocessingService:
         Returns:
             Tuple of (processed DataFrame, quality report)
         """
-        import time
         start_time = time.time()
         
         if config is None:
@@ -359,41 +186,55 @@ class PreprocessingService:
         
         # Step 1: Remove empty rows and columns
         if config.remove_empty_rows:
-            df = self._remove_empty_rows(df, report)
+            df, rows_removed = _remove_empty_rows(df)
+            report.empty_rows_removed = rows_removed
         
         if config.remove_empty_columns:
-            df = self._remove_empty_columns(df, report)
+            df, empty_cols = _remove_empty_columns(df)
+            report.empty_columns_removed = len(empty_cols)
+            report.columns_dropped.extend(empty_cols)
         
         # Step 2: Trim whitespace
         if config.trim_whitespace:
-            df = self._trim_whitespace(df)
+            df = _trim_whitespace(df)
         
         # Step 3: Remove duplicates
         if config.remove_duplicates:
-            df = self._remove_duplicates(df, report)
+            df, dups_removed = _remove_duplicates(df)
+            report.duplicates_removed = dups_removed
         
         # Step 4: Handle missing values
-        df = self._handle_missing_values(df, config.handle_missing, config.fill_value, report)
+        df, values_handled = _handle_missing_values(
+            df, config.handle_missing, config.fill_value
+        )
+        report.missing_values_handled = values_handled
         
         # Step 5: Convert types
         if config.convert_types:
-            df = self._convert_types(df, report)
+            df, conversions = _convert_types(df)
+            report.type_conversions.update(conversions)
         
         # Step 6: Normalize columns
         if config.normalize_columns:
-            df = self._normalize_columns(df, config.normalize_columns, report)
+            df, normalizations = _normalize_columns(df, config.normalize_columns)
+            report.type_conversions.update(normalizations)
         
         # Step 7: Filter data
         if config.filter_conditions:
-            df = self._filter_data(df, config.filter_conditions, report)
+            df, filter_warnings = _filter_data(df, config.filter_conditions)
+            report.warnings.extend(filter_warnings)
         
         # Step 8: Select/drop columns
-        df = self._select_columns(df, config.columns_to_keep, config.columns_to_drop, report)
+        df, dropped_cols, select_warnings = _select_columns(
+            df, config.columns_to_keep, config.columns_to_drop
+        )
+        report.columns_dropped.extend(dropped_cols)
+        report.warnings.extend(select_warnings)
         
         # Generate final statistics
         report.processed_rows = len(df)
         report.processed_columns = len(df.columns)
-        self._generate_column_stats(df, report)
+        report.column_stats = _generate_column_stats(df)
         
         report.processing_time_ms = int((time.time() - start_time) * 1000)
         
