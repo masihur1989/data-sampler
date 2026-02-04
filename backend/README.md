@@ -5,6 +5,7 @@ A high-performance FastAPI backend for sampling data from large Excel files (up 
 ## Features
 
 - **Memory-Efficient Processing**: Handles large Excel files without loading entire file into memory
+- **Pre-processing Pipeline**: Data cleaning, validation, and transformation before sampling
 - **Multiple Sampling Methods**: Random, Stratified, Systematic, Cluster, and Weighted sampling
 - **Streaming Support**: Server-Sent Events (SSE) for real-time data streaming
 - **File Archival**: Automatic compression and retention policies
@@ -20,15 +21,17 @@ app/
 │   └── schemas.py       # Pydantic models for request/response
 ├── routers/
 │   ├── upload.py        # File upload endpoints
+│   ├── preprocess.py    # Pre-processing endpoints
 │   ├── sample.py        # Sampling endpoints
 │   ├── export.py        # Export/download endpoints
 │   └── archive.py       # Archival endpoints
 ├── services/
-│   ├── file_service.py     # File upload and storage
-│   ├── parser_service.py   # Excel parsing with streaming
-│   ├── sampler_service.py  # Sampling algorithms
-│   ├── export_service.py   # Export functionality
-│   └── archive_service.py  # File archival
+│   ├── file_service.py         # File upload and storage
+│   ├── parser_service.py       # Excel parsing with streaming
+│   ├── preprocessing_service.py # Data cleaning and transformation
+│   ├── sampler_service.py      # Sampling algorithms
+│   ├── export_service.py       # Export functionality
+│   └── archive_service.py      # File archival
 └── utils/
 ```
 
@@ -70,6 +73,55 @@ For stratified sampling, we use a memory-efficient two-pass approach:
 1. **Pass 1**: Count items in each stratum to calculate proportions
 2. **Pass 2**: Apply reservoir sampling to each stratum with proportional sample sizes
 
+## Pre-processing Pipeline
+
+The pre-processing layer cleans and transforms raw data before sampling. This ensures data quality and allows filtering out irrelevant records.
+
+### Workflow
+
+```
+Upload -> Pre-process -> Sample -> Export
+```
+
+### Pre-processing Steps
+
+1. **Analyze**: Generate data quality report (missing values, duplicates, statistics)
+2. **Clean**: Remove duplicates, trim whitespace, remove empty rows/columns
+3. **Handle Missing**: Keep, drop, or fill missing values (mean, median, mode, custom value)
+4. **Transform**: Type conversion, column normalization (0-1 scale)
+5. **Filter**: Apply conditions to filter rows, select/drop columns
+6. **Validate**: Generate final quality report
+
+### Pre-processing Configuration
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `remove_duplicates` | bool | Remove duplicate rows (default: true) |
+| `handle_missing` | string | Strategy: keep, drop, fill_mean, fill_median, fill_mode, fill_value |
+| `fill_value` | string | Value to use when handle_missing=fill_value |
+| `trim_whitespace` | bool | Trim whitespace from strings (default: true) |
+| `remove_empty_rows` | bool | Remove rows with all empty values (default: true) |
+| `remove_empty_columns` | bool | Remove columns with all empty values (default: true) |
+| `convert_types` | bool | Auto-convert string columns to numeric (default: false) |
+| `normalize_columns` | list | Columns to normalize to 0-1 scale |
+| `filter_conditions` | dict | Filter conditions: {column: {op, value}} |
+| `columns_to_keep` | list | Only keep these columns |
+| `columns_to_drop` | list | Drop these columns |
+
+### Filter Operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `eq` | Equals | `{"category": {"op": "eq", "value": "A"}}` |
+| `ne` | Not equals | `{"status": {"op": "ne", "value": "inactive"}}` |
+| `gt` | Greater than | `{"value": {"op": "gt", "value": 100}}` |
+| `gte` | Greater than or equal | `{"age": {"op": "gte", "value": 18}}` |
+| `lt` | Less than | `{"price": {"op": "lt", "value": 50}}` |
+| `lte` | Less than or equal | `{"score": {"op": "lte", "value": 100}}` |
+| `in` | In list | `{"region": {"op": "in", "value": ["North", "South"]}}` |
+| `not_in` | Not in list | `{"type": {"op": "not_in", "value": ["test", "demo"]}}` |
+| `contains` | String contains | `{"name": {"op": "contains", "value": "Corp"}}` |
+
 ## Sampling Methods
 
 ### Random Sampling
@@ -109,6 +161,15 @@ Assigns selection probability based on weight column values.
 | POST | `/api/upload` | Upload Excel file |
 | GET | `/api/upload/{file_id}` | Get file metadata |
 | DELETE | `/api/upload/{file_id}` | Delete uploaded file |
+
+### Pre-processing
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/preprocess/analyze` | Analyze file and get quality report |
+| POST | `/api/preprocess` | Pre-process file and store result |
+| GET | `/api/preprocess/{processed_id}` | Get processed file info |
+| GET | `/api/preprocess/{processed_id}/preview` | Preview processed data |
 
 ### Sampling
 
