@@ -27,3 +27,4 @@ ENV/
 .coverage
 htmlcov/
 .mypy_cache/
+.idea/
