@@ -1,0 +1,461 @@
+<mxfile host="app.diagrams.net" modified="2026-02-04T15:41:00.000Z" agent="Devin" version="21.0.0" type="device">
+  <diagram name="Data Sampler Architecture v2" id="data-sampler-arch-v2">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="Data Sampler Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1;fontColor=#1a202c;" vertex="1" parent="1">
+          <mxGeometry x="450" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Excel File Sampling Application - Enhanced Architecture with Archival &amp; Streaming" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#718096;" vertex="1" parent="1">
+          <mxGeometry x="400" y="55" width="600" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== PRESENTATION LAYER ==================== -->
+        <mxCell id="layer1-label" value="PRESENTATION LAYER" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#48bb78;" vertex="1" parent="1">
+          <mxGeometry x="60" y="90" width="180" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="web-interface" value="&lt;b&gt;Web Interface&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;React + TypeScript + Tailwind&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="115" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="file-upload-ui" value="&lt;b&gt;File Upload UI&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Drag &amp; Drop / Browse&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="115" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="sampling-config" value="&lt;b&gt;Sampling Config&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Method &amp; Parameters&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="460" y="115" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="output-config" value="&lt;b&gt;Output Config&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;File / Stream Selection&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="640" y="115" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="results-viewer" value="&lt;b&gt;Results Viewer&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Preview &amp; Download&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="115" width="160" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow: Presentation to API -->
+        <mxCell id="arrow1" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;strokeColor=#667eea;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="180" as="sourcePoint" />
+            <mxPoint x="540" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow1-label" value="HTTP/REST API + WebSocket (Streaming)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontColor=#667eea;" vertex="1" parent="1">
+          <mxGeometry x="560" y="190" width="200" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== API LAYER ==================== -->
+        <mxCell id="layer2-label" value="API LAYER" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#4299e1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="220" width="180" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="fastapi-backend" value="&lt;b&gt;FastAPI Backend&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Python REST API&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="245" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="file-handler" value="&lt;b&gt;File Handler&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Upload / Validation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="245" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="websocket-handler" value="&lt;b&gt;WebSocket Handler&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Real-time Streaming&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="460" y="245" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="response-builder" value="&lt;b&gt;Response Builder&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;JSON / File / Stream&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="640" y="245" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="archive-controller" value="&lt;b&gt;Archive Controller&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;File Lifecycle Mgmt&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="245" width="160" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow: API to Processing -->
+        <mxCell id="arrow2" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#667eea;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="310" as="sourcePoint" />
+            <mxPoint x="540" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ==================== DATA PROCESSING LAYER ==================== -->
+        <mxCell id="layer3-label" value="DATA PROCESSING LAYER" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#ed8936;" vertex="1" parent="1">
+          <mxGeometry x="60" y="350" width="180" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="excel-parser" value="&lt;b&gt;Excel Parser&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;openpyxl / xlrd&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="375" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="data-processor" value="&lt;b&gt;Data Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;pandas DataFrame&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="375" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="data-validator" value="&lt;b&gt;Data Validator&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Schema Validation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="460" y="375" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="chunk-processor" value="&lt;b&gt;Chunk Processor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Large File Handling&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="640" y="375" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata-extractor" value="&lt;b&gt;Metadata Extractor&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;File Info &amp; Stats&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="820" y="375" width="160" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow: Processing to Sampling -->
+        <mxCell id="arrow3" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#667eea;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="440" as="sourcePoint" />
+            <mxPoint x="540" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ==================== SAMPLING ENGINE (DETAILED) ==================== -->
+        <mxCell id="layer4-label" value="SAMPLING ENGINE (CORE)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#9f7aea;" vertex="1" parent="1">
+          <mxGeometry x="60" y="480" width="200" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- Sampling Engine Container Box -->
+        <mxCell id="sampling-engine-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faf5ff;strokeColor=#9f7aea;strokeWidth=2;strokeDasharray=3 3;" vertex="1" parent="1">
+          <mxGeometry x="60" y="505" width="1280" height="280" as="geometry" />
+        </mxCell>
+        
+        <!-- Sampling Strategy Selector -->
+        <mxCell id="strategy-selector" value="&lt;b&gt;Strategy Selector&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Algorithm Router&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="80" y="520" width="140" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow from Strategy Selector -->
+        <mxCell id="strategy-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#805ad5;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="strategy-selector">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="230" y="545" as="sourcePoint" />
+            <mxPoint x="260" y="545" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Sampling Methods Row -->
+        <mxCell id="random-sampling" value="&lt;b&gt;Random Sampling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6bcfa;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="270" y="520" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="stratified-sampling" value="&lt;b&gt;Stratified Sampling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6bcfa;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="420" y="520" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="systematic-sampling" value="&lt;b&gt;Systematic Sampling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6bcfa;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="570" y="520" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="cluster-sampling" value="&lt;b&gt;Cluster Sampling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6bcfa;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="720" y="520" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="weighted-sampling" value="&lt;b&gt;Weighted Sampling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6bcfa;strokeColor=#805ad5;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="870" y="520" width="130" height="35" as="geometry" />
+        </mxCell>
+        
+        <!-- Sampling Process Flow Box -->
+        <mxCell id="process-flow-label" value="SAMPLING PROCESS FLOW" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#805ad5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="575" width="180" height="15" as="geometry" />
+        </mxCell>
+        
+        <!-- Process Flow Steps -->
+        <mxCell id="step1-input" value="&lt;b&gt;1. Input Validation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Verify DataFrame&lt;br&gt;Check sample size&lt;br&gt;Validate parameters&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="step1-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#9f7aea;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="200" y="630" as="sourcePoint" />
+            <mxPoint x="220" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="step2-analyze" value="&lt;b&gt;2. Data Analysis&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Calculate statistics&lt;br&gt;Identify strata/groups&lt;br&gt;Determine weights&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="step2-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#9f7aea;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="340" y="630" as="sourcePoint" />
+            <mxPoint x="360" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="step3-select" value="&lt;b&gt;3. Sample Selection&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Apply algorithm&lt;br&gt;Generate indices&lt;br&gt;Handle edge cases&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="step3-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#9f7aea;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="480" y="630" as="sourcePoint" />
+            <mxPoint x="500" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="step4-extract" value="&lt;b&gt;4. Data Extraction&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Extract selected rows&lt;br&gt;Preserve data types&lt;br&gt;Maintain order&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="step4-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#9f7aea;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="620" y="630" as="sourcePoint" />
+            <mxPoint x="640" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="step5-validate" value="&lt;b&gt;5. Result Validation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Verify sample size&lt;br&gt;Check distribution&lt;br&gt;Generate stats&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="step5-arrow" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#9f7aea;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="760" y="630" as="sourcePoint" />
+            <mxPoint x="780" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="step6-output" value="&lt;b&gt;6. Output Prep&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Format for export&lt;br&gt;Prepare metadata&lt;br&gt;Ready for stream&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9f7aea;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="780" y="595" width="120" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- Sampling Parameters Box -->
+        <mxCell id="params-label" value="CONFIGURABLE PARAMETERS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#805ad5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="680" width="180" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="param-size" value="&lt;b&gt;Sample Size&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Count or Percentage&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="param-seed" value="&lt;b&gt;Random Seed&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Reproducibility&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="param-strata" value="&lt;b&gt;Strata Column&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Grouping Field&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="param-interval" value="&lt;b&gt;Interval (k)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Systematic Step&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="param-weights" value="&lt;b&gt;Weight Column&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Probability Weights&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="param-replace" value="&lt;b&gt;Replacement&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;With/Without&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="700" width="110" height="45" as="geometry" />
+        </mxCell>
+        
+        <!-- Sampling Statistics Output -->
+        <mxCell id="stats-box" value="&lt;b&gt;Sampling Statistics&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Original rows | Sampled rows | Sampling rate&lt;br&gt;Distribution metrics | Confidence interval&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9d8fd;strokeColor=#805ad5;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="595" width="180" height="70" as="geometry" />
+        </mxCell>
+        
+        <!-- NumPy/Scikit-learn badge -->
+        <mxCell id="numpy-badge" value="&lt;b&gt;Powered by&lt;/b&gt;&lt;br&gt;NumPy + scikit-learn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3776ab;strokeColor=#3776ab;fontColor=#ffffff;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="520" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow: Sampling to Output -->
+        <mxCell id="arrow4" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#667eea;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="795" as="sourcePoint" />
+            <mxPoint x="540" y="835" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ==================== OUTPUT LAYER (File + Streaming) ==================== -->
+        <mxCell id="layer5-label" value="OUTPUT LAYER (FILE + STREAMING)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#f56565;" vertex="1" parent="1">
+          <mxGeometry x="60" y="835" width="250" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="excel-export" value="&lt;b&gt;Excel Export&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;.xlsx / .xls&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff5f5;strokeColor=#f56565;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="100" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="csv-export" value="&lt;b&gt;CSV Export&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;.csv format&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff5f5;strokeColor=#f56565;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="260" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="json-export" value="&lt;b&gt;JSON Export&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;.json format&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff5f5;strokeColor=#f56565;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="420" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="stream-output" value="&lt;b&gt;Stream Output&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;WebSocket / SSE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="580" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="chunk-stream" value="&lt;b&gt;Chunk Streaming&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;Paginated Results&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="740" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="api-response" value="&lt;b&gt;API Response&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#718096&quot;&gt;REST JSON&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="900" y="860" width="140" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Arrow: Output to Storage -->
+        <mxCell id="arrow5" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#667eea;strokeWidth=2;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="920" as="sourcePoint" />
+            <mxPoint x="540" y="960" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ==================== ARCHIVAL & STORAGE LAYER ==================== -->
+        <mxCell id="layer6-label" value="ARCHIVAL &amp; STORAGE LAYER" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#38a169;" vertex="1" parent="1">
+          <mxGeometry x="60" y="960" width="220" height="20" as="geometry" />
+        </mxCell>
+        
+        <!-- Archival Container Box -->
+        <mxCell id="archival-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#38a169;strokeWidth=2;strokeDasharray=3 3;" vertex="1" parent="1">
+          <mxGeometry x="60" y="985" width="1280" height="200" as="geometry" />
+        </mxCell>
+        
+        <!-- Upload Storage -->
+        <mxCell id="upload-storage-label" value="UPLOAD STORAGE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#38a169;" vertex="1" parent="1">
+          <mxGeometry x="80" y="995" width="150" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="temp-storage" value="&lt;b&gt;Temp Storage&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Processing Cache&lt;br&gt;Auto-cleanup&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1015" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="archive-storage" value="&lt;b&gt;Archive Storage&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Long-term retention&lt;br&gt;Compressed files&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="1015" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="metadata-store" value="&lt;b&gt;Metadata Store&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;File info &amp; history&lt;br&gt;SQLite / JSON&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1015" width="120" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Archival Process -->
+        <mxCell id="archival-process-label" value="ARCHIVAL PROCESS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#38a169;" vertex="1" parent="1">
+          <mxGeometry x="500" y="995" width="150" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="arch-step1" value="&lt;b&gt;1. Upload&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Receive file&lt;br&gt;Generate UUID&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1015" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="arch-arrow1" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#38a169;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="600" y="1042" as="sourcePoint" />
+            <mxPoint x="620" y="1042" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="arch-step2" value="&lt;b&gt;2. Process&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Store in temp&lt;br&gt;Extract metadata&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1015" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="arch-arrow2" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#38a169;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="720" y="1042" as="sourcePoint" />
+            <mxPoint x="740" y="1042" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="arch-step3" value="&lt;b&gt;3. Sample&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Run sampling&lt;br&gt;Store results&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="1015" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="arch-arrow3" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#38a169;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="840" y="1042" as="sourcePoint" />
+            <mxPoint x="860" y="1042" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="arch-step4" value="&lt;b&gt;4. Archive&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Compress &amp; move&lt;br&gt;Update metadata&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="1015" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="arch-arrow4" value="" style="endArrow=classic;html=1;rounded=0;strokeColor=#38a169;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="960" y="1042" as="sourcePoint" />
+            <mxPoint x="980" y="1042" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="arch-step5" value="&lt;b&gt;5. Cleanup&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Remove temp&lt;br&gt;Apply retention&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="980" y="1015" width="100" height="55" as="geometry" />
+        </mxCell>
+        
+        <!-- Retention Policies -->
+        <mxCell id="retention-label" value="RETENTION POLICIES" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#38a169;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1085" width="150" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="policy-temp" value="&lt;b&gt;Temp Files&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;24 hours&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="policy-archive" value="&lt;b&gt;Archives&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;30/90/365 days&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="policy-metadata" value="&lt;b&gt;Metadata&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Permanent&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="policy-results" value="&lt;b&gt;Results&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;7 days default&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Archive Features -->
+        <mxCell id="features-label" value="ARCHIVE FEATURES" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;fontColor=#38a169;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1085" width="150" height="15" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="feature-compress" value="&lt;b&gt;Compression&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;gzip / zip&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="feature-version" value="&lt;b&gt;Versioning&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;History tracking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="feature-search" value="&lt;b&gt;Search&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;By metadata&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="feature-restore" value="&lt;b&gt;Restore&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Re-download&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="feature-audit" value="&lt;b&gt;Audit Log&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot; color=&quot;#718096&quot;&gt;Access history&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6f6d5;strokeColor=#38a169;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="1105" width="90" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- ==================== TECHNOLOGY STACK ==================== -->
+        <mxCell id="tech-stack-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7fafc;strokeColor=#e2e8f0;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1210" width="1280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-stack-title" value="Technology Stack" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontColor=#2d3748;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1220" width="150" height="20" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="tech-react" value="&lt;b&gt;Frontend&lt;/b&gt;&lt;br&gt;React + TypeScript" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#61dafb;strokeColor=#61dafb;fontColor=#282c34;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1250" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-fastapi" value="&lt;b&gt;Backend&lt;/b&gt;&lt;br&gt;FastAPI (Python)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#009688;strokeColor=#009688;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1250" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-pandas" value="&lt;b&gt;Data Processing&lt;/b&gt;&lt;br&gt;pandas + openpyxl" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#150458;strokeColor=#150458;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1250" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-numpy" value="&lt;b&gt;Sampling&lt;/b&gt;&lt;br&gt;NumPy + scikit-learn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3776ab;strokeColor=#3776ab;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1250" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-websocket" value="&lt;b&gt;Streaming&lt;/b&gt;&lt;br&gt;WebSocket + SSE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d97706;strokeColor=#d97706;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1250" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-sqlite" value="&lt;b&gt;Metadata DB&lt;/b&gt;&lt;br&gt;SQLite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#003b57;strokeColor=#003b57;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="700" y="1250" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-tailwind" value="&lt;b&gt;Styling&lt;/b&gt;&lt;br&gt;Tailwind CSS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#38b2ac;strokeColor=#38b2ac;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="810" y="1250" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-vite" value="&lt;b&gt;Build Tool&lt;/b&gt;&lt;br&gt;Vite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#646cff;strokeColor=#646cff;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="1250" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tech-gzip" value="&lt;b&gt;Compression&lt;/b&gt;&lt;br&gt;gzip / zlib" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#38a169;strokeColor=#38a169;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="1250" width="100" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e2e8f0;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1330" width="1280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="Legend:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontStyle=1;fontColor=#2d3748;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1345" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-presentation" value="Presentation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#48bb78;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="140" y="1345" width="80" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-api" value="API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ebf8ff;strokeColor=#4299e1;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="230" y="1345" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-processing" value="Processing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf0;strokeColor=#ed8936;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1345" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-sampling" value="Sampling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faf5ff;strokeColor=#9f7aea;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1345" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-file-output" value="File Output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff5f5;strokeColor=#f56565;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1345" width="70" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-stream-output" value="Stream Output" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="540" y="1345" width="85" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-archival" value="Archival" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff4;strokeColor=#38a169;strokeWidth=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="635" y="1345" width="60" height="25" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
