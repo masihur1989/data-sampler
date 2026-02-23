@@ -198,7 +198,8 @@ class SamplerService:
         self,
         parser: ExcelParser,
         sample_size: int,
-        strata_column: str,
+        strata_column: Optional[str] = None,
+        strata_columns: Optional[list[str] | dict[str, list[str]]] = None,
         seed: Optional[int] = None,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
@@ -206,12 +207,23 @@ class SamplerService:
         Perform stratified sampling with proportional representation.
         
         Uses a two-pass approach: first counts items per stratum, then
-        samples proportionally from each stratum.
+        samples proportionally from each stratum. Supports both single-column
+        and multi-column stratification.
+        
+        For multi-column stratification, strata are created from the combination
+        of values across all specified columns (e.g., "A|B|C" for columns with
+        values A, B, C).
+        
+        strata_columns can be:
+        - A list of column names: ["region", "category"] - uses all values
+        - A dict mapping columns to allowed values: {"region": ["North", "South"], "category": ["A", "B"]}
+          This filters to only include rows where the column value is in the allowed list.
         
         Args:
             parser: ExcelParser instance for the source file
             sample_size: Total number of rows to sample
-            strata_column: Column name to stratify by
+            strata_column: Single column name to stratify by (deprecated)
+            strata_columns: List of column names or dict mapping columns to allowed values
             seed: Random seed for reproducibility
             sheet_name: Sheet to sample from
             
@@ -219,21 +231,52 @@ class SamplerService:
             DataFrame containing proportionally sampled rows from each stratum
             
         Raises:
-            ValueError: If strata_column is not found in the data
+            ValueError: If strata columns are not found in the data
         """
+        # Parse strata_columns into cols_to_use and allowed_values
+        allowed_values: dict[str, set[str]] = {}
+        
+        if isinstance(strata_columns, dict):
+            # Dict format: {"column": ["value1", "value2"]}
+            cols_to_use = list(strata_columns.keys())
+            allowed_values = {col: set(str(v) for v in vals) for col, vals in strata_columns.items()}
+        elif isinstance(strata_columns, list):
+            # List format: ["column1", "column2"]
+            cols_to_use = strata_columns
+        elif strata_column:
+            # Backward compatible single column
+            cols_to_use = [strata_column]
+        else:
+            raise ValueError("Either strata_column or strata_columns must be provided")
+        
         sampler = StratifiedReservoirSampler(sample_size, seed)
         columns = None
-        strata_col_idx = None
+        strata_col_indices: list[int] = []
 
         for chunk in parser.iter_rows(sheet_name):
             if columns is None:
                 columns = list(chunk.columns)
-                if strata_column not in columns:
-                    raise ValueError(f"Strata column '{strata_column}' not found in data")
-                strata_col_idx = columns.index(strata_column)
+                # Validate all strata columns exist
+                for col in cols_to_use:
+                    if col not in columns:
+                        raise ValueError(f"Strata column '{col}' not found in data")
+                    strata_col_indices.append(columns.index(col))
 
             for _, row in chunk.iterrows():
-                stratum = str(row.iloc[strata_col_idx])
+                # Create composite stratum key from all columns
+                stratum_parts = [str(row.iloc[idx]) for idx in strata_col_indices]
+                
+                # Check if row matches allowed values filter (if specified)
+                if allowed_values:
+                    skip_row = False
+                    for col, idx in zip(cols_to_use, strata_col_indices):
+                        if col in allowed_values and str(row.iloc[idx]) not in allowed_values[col]:
+                            skip_row = True
+                            break
+                    if skip_row:
+                        continue
+                
+                stratum = "|".join(stratum_parts)
                 sampler.count_stratum(stratum)
 
         sampler.initialize_reservoirs()
@@ -241,7 +284,20 @@ class SamplerService:
         row_idx = 0
         for chunk in parser.iter_rows(sheet_name):
             for _, row in chunk.iterrows():
-                stratum = str(row.iloc[strata_col_idx])
+                stratum_parts = [str(row.iloc[idx]) for idx in strata_col_indices]
+                
+                # Check if row matches allowed values filter (if specified)
+                if allowed_values:
+                    skip_row = False
+                    for col, idx in zip(cols_to_use, strata_col_indices):
+                        if col in allowed_values and str(row.iloc[idx]) not in allowed_values[col]:
+                            skip_row = True
+                            break
+                    if skip_row:
+                        row_idx += 1
+                        continue
+                
+                stratum = "|".join(stratum_parts)
                 sampler.add(stratum, row_idx, row.tolist())
                 row_idx += 1
 
@@ -460,10 +516,14 @@ class SamplerService:
                 parser, sample_size, config.random_seed, config.with_replacement, config.sheet_name
             )
         elif config.method == SamplingMethod.STRATIFIED:
-            if not config.strata_column:
-                raise ValueError("Strata column required for stratified sampling")
+            if not config.strata_column and not config.strata_columns:
+                raise ValueError("Either strata_column or strata_columns required for stratified sampling")
             df = self.sample_stratified(
-                parser, sample_size, config.strata_column, config.random_seed, config.sheet_name
+                parser, sample_size, 
+                strata_column=config.strata_column,
+                strata_columns=config.strata_columns,
+                seed=config.random_seed, 
+                sheet_name=config.sheet_name
             )
         elif config.method == SamplingMethod.SYSTEMATIC:
             df = self.sample_systematic(parser, sample_size, config.random_seed, config.sheet_name)

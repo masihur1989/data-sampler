@@ -449,7 +449,7 @@ class TestSamplerServiceIntegration:
             random_seed=42
         )
         
-        with pytest.raises(ValueError, match="Strata column required"):
+        with pytest.raises(ValueError, match="strata_column or strata_columns required"):
             service.sample(sample_excel_file, config)
     
     def test_sample_cluster_missing_column(self, service, sample_excel_file):
@@ -475,3 +475,242 @@ class TestSamplerServiceIntegration:
         
         with pytest.raises(ValueError, match="Weight column required"):
             service.sample(sample_excel_file, config)
+
+
+class TestMultiColumnStratifiedSampling:
+    """Tests for multi-column stratified sampling."""
+    
+    @pytest.fixture
+    def service(self):
+        """Create a fresh service instance for each test."""
+        return SamplerService()
+    
+    @pytest.fixture
+    def multi_column_excel_file(self, tmp_path):
+        """Create an Excel file with multiple categorical columns for testing."""
+        # Create data with 2 categorical columns: region and category
+        # Region: North (40), South (60)
+        # Category: A (50), B (50)
+        # Combined strata: North-A (20), North-B (20), South-A (30), South-B (30)
+        data = []
+        for i in range(20):
+            data.append({'id': len(data) + 1, 'region': 'North', 'category': 'A', 'value': i})
+        for i in range(20):
+            data.append({'id': len(data) + 1, 'region': 'North', 'category': 'B', 'value': i})
+        for i in range(30):
+            data.append({'id': len(data) + 1, 'region': 'South', 'category': 'A', 'value': i})
+        for i in range(30):
+            data.append({'id': len(data) + 1, 'region': 'South', 'category': 'B', 'value': i})
+        
+        df = pd.DataFrame(data)
+        file_path = tmp_path / "multi_column_test.xlsx"
+        df.to_excel(file_path, index=False)
+        return file_path
+    
+    def test_multi_column_stratified_sampling(self, service, multi_column_excel_file):
+        """Test stratified sampling with multiple columns."""
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=20,
+            strata_columns=['region', 'category'],
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        assert len(df) == 20
+        assert stats['method'] == 'stratified'
+        
+        # Check that all strata are represented
+        strata_counts = df.groupby(['region', 'category']).size()
+        assert len(strata_counts) == 4  # All 4 combinations should be present
+    
+    def test_multi_column_proportional_representation(self, service, multi_column_excel_file):
+        """Test that multi-column stratified sampling maintains proportions."""
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=20,
+            strata_columns=['region', 'category'],
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Original proportions: North-A: 20%, North-B: 20%, South-A: 30%, South-B: 30%
+        # With sample_size=20, expected: North-A: 4, North-B: 4, South-A: 6, South-B: 6
+        strata_counts = df.groupby(['region', 'category']).size().to_dict()
+        
+        # Allow some variance due to rounding
+        assert strata_counts.get(('North', 'A'), 0) >= 3
+        assert strata_counts.get(('North', 'B'), 0) >= 3
+        assert strata_counts.get(('South', 'A'), 0) >= 5
+        assert strata_counts.get(('South', 'B'), 0) >= 5
+    
+    def test_single_column_backward_compatibility(self, service, multi_column_excel_file):
+        """Test that single strata_column still works (backward compatibility)."""
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_column='region',
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        assert len(df) == 10
+        assert 'region' in df.columns
+    
+    def test_strata_columns_takes_precedence(self, service, multi_column_excel_file):
+        """Test that strata_columns takes precedence over strata_column."""
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=20,
+            strata_column='region',  # This should be ignored
+            strata_columns=['region', 'category'],  # This should be used
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should have 4 strata (region x category), not 2 (just region)
+        strata_counts = df.groupby(['region', 'category']).size()
+        assert len(strata_counts) == 4
+    
+    def test_invalid_strata_column_in_list(self, service, multi_column_excel_file):
+        """Test error when one of the strata columns doesn't exist."""
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns=['region', 'nonexistent'],
+            random_seed=42
+        )
+        
+        with pytest.raises(ValueError, match="not found"):
+            service.sample(multi_column_excel_file, config)
+    
+    def test_three_column_stratification(self, service, tmp_path):
+        """Test stratified sampling with three columns."""
+        # Create data with 3 categorical columns
+        data = []
+        for region in ['North', 'South']:
+            for category in ['A', 'B']:
+                for status in ['Active', 'Inactive']:
+                    for i in range(10):
+                        data.append({
+                            'id': len(data) + 1,
+                            'region': region,
+                            'category': category,
+                            'status': status,
+                            'value': i
+                        })
+        
+        df = pd.DataFrame(data)
+        file_path = tmp_path / "three_column_test.xlsx"
+        df.to_excel(file_path, index=False)
+        
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=16,  # 2 per stratum (8 strata total)
+            strata_columns=['region', 'category', 'status'],
+            random_seed=42
+        )
+        
+        result_df, stats = service.sample(file_path, config)
+        
+        assert len(result_df) == 16
+        
+        # All 8 strata should be represented
+        strata_counts = result_df.groupby(['region', 'category', 'status']).size()
+        assert len(strata_counts) == 8
+    
+    def test_dict_format_value_filtering(self, service, multi_column_excel_file):
+        """Test stratified sampling with dict format to filter specific values."""
+        # multi_column_excel_file has: North-A (20), North-B (20), South-A (30), South-B (30)
+        # Filter to only North region and category A
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["North"], "category": ["A"]},
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should only have rows from North-A stratum (20 rows total, sample 10)
+        assert len(df) == 10
+        assert all(df['region'] == 'North')
+        assert all(df['category'] == 'A')
+    
+    def test_dict_format_multiple_values_per_column(self, service, multi_column_excel_file):
+        """Test dict format with multiple allowed values per column."""
+        # Filter to North/South regions but only category A
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["North", "South"], "category": ["A"]},
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should have rows from North-A (20) and South-A (30) = 50 total, sample 10
+        assert len(df) == 10
+        assert all(df['category'] == 'A')
+        # Both regions should be represented proportionally
+        region_counts = df['region'].value_counts()
+        assert 'North' in region_counts.index
+        assert 'South' in region_counts.index
+    
+    def test_dict_format_excludes_non_matching_rows(self, service, tmp_path):
+        """Test that dict format excludes rows not matching the filter."""
+        # Create data with 3 categories
+        data = []
+        for cat in ['A', 'B', 'C']:
+            for i in range(30):
+                data.append({'id': len(data) + 1, 'category': cat, 'value': i})
+        
+        df = pd.DataFrame(data)
+        file_path = tmp_path / "three_cat_test.xlsx"
+        df.to_excel(file_path, index=False)
+        
+        # Only sample from categories A and B, exclude C
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"category": ["A", "B"]},
+            random_seed=42
+        )
+        
+        result_df, stats = service.sample(file_path, config)
+        
+        assert len(result_df) == 10
+        # No rows should have category C
+        assert 'C' not in result_df['category'].values
+        # Both A and B should be present
+        assert 'A' in result_df['category'].values
+        assert 'B' in result_df['category'].values
+    
+    def test_dict_format_with_nonexistent_value(self, service, multi_column_excel_file):
+        """Test dict format with a value that doesn't exist in data."""
+        # Filter to a region that doesn't exist
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["East"]},  # East doesn't exist
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should return empty DataFrame since no rows match
+        assert len(df) == 0
