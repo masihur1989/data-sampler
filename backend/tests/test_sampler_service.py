@@ -628,3 +628,89 @@ class TestMultiColumnStratifiedSampling:
         # All 8 strata should be represented
         strata_counts = result_df.groupby(['region', 'category', 'status']).size()
         assert len(strata_counts) == 8
+    
+    def test_dict_format_value_filtering(self, service, multi_column_excel_file):
+        """Test stratified sampling with dict format to filter specific values."""
+        # multi_column_excel_file has: North-A (20), North-B (20), South-A (30), South-B (30)
+        # Filter to only North region and category A
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["North"], "category": ["A"]},
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should only have rows from North-A stratum (20 rows total, sample 10)
+        assert len(df) == 10
+        assert all(df['region'] == 'North')
+        assert all(df['category'] == 'A')
+    
+    def test_dict_format_multiple_values_per_column(self, service, multi_column_excel_file):
+        """Test dict format with multiple allowed values per column."""
+        # Filter to North/South regions but only category A
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["North", "South"], "category": ["A"]},
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should have rows from North-A (20) and South-A (30) = 50 total, sample 10
+        assert len(df) == 10
+        assert all(df['category'] == 'A')
+        # Both regions should be represented proportionally
+        region_counts = df['region'].value_counts()
+        assert 'North' in region_counts.index
+        assert 'South' in region_counts.index
+    
+    def test_dict_format_excludes_non_matching_rows(self, service, tmp_path):
+        """Test that dict format excludes rows not matching the filter."""
+        # Create data with 3 categories
+        data = []
+        for cat in ['A', 'B', 'C']:
+            for i in range(30):
+                data.append({'id': len(data) + 1, 'category': cat, 'value': i})
+        
+        df = pd.DataFrame(data)
+        file_path = tmp_path / "three_cat_test.xlsx"
+        df.to_excel(file_path, index=False)
+        
+        # Only sample from categories A and B, exclude C
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"category": ["A", "B"]},
+            random_seed=42
+        )
+        
+        result_df, stats = service.sample(file_path, config)
+        
+        assert len(result_df) == 10
+        # No rows should have category C
+        assert 'C' not in result_df['category'].values
+        # Both A and B should be present
+        assert 'A' in result_df['category'].values
+        assert 'B' in result_df['category'].values
+    
+    def test_dict_format_with_nonexistent_value(self, service, multi_column_excel_file):
+        """Test dict format with a value that doesn't exist in data."""
+        # Filter to a region that doesn't exist
+        config = SamplingConfig(
+            file_id="test123",
+            method=SamplingMethod.STRATIFIED,
+            sample_size=10,
+            strata_columns={"region": ["East"]},  # East doesn't exist
+            random_seed=42
+        )
+        
+        df, stats = service.sample(multi_column_excel_file, config)
+        
+        # Should return empty DataFrame since no rows match
+        assert len(df) == 0

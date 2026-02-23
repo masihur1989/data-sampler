@@ -199,7 +199,7 @@ class SamplerService:
         parser: ExcelParser,
         sample_size: int,
         strata_column: Optional[str] = None,
-        strata_columns: Optional[list[str]] = None,
+        strata_columns: Optional[list[str] | dict[str, list[str]]] = None,
         seed: Optional[int] = None,
         sheet_name: Optional[str] = None,
     ) -> pd.DataFrame:
@@ -214,11 +214,16 @@ class SamplerService:
         of values across all specified columns (e.g., "A|B|C" for columns with
         values A, B, C).
         
+        strata_columns can be:
+        - A list of column names: ["region", "category"] - uses all values
+        - A dict mapping columns to allowed values: {"region": ["North", "South"], "category": ["A", "B"]}
+          This filters to only include rows where the column value is in the allowed list.
+        
         Args:
             parser: ExcelParser instance for the source file
             sample_size: Total number of rows to sample
             strata_column: Single column name to stratify by (deprecated)
-            strata_columns: List of column names for multi-column stratification
+            strata_columns: List of column names or dict mapping columns to allowed values
             seed: Random seed for reproducibility
             sheet_name: Sheet to sample from
             
@@ -228,10 +233,18 @@ class SamplerService:
         Raises:
             ValueError: If strata columns are not found in the data
         """
-        # Handle both single column (backward compatible) and multiple columns
-        if strata_columns:
+        # Parse strata_columns into cols_to_use and allowed_values
+        allowed_values: dict[str, set[str]] = {}
+        
+        if isinstance(strata_columns, dict):
+            # Dict format: {"column": ["value1", "value2"]}
+            cols_to_use = list(strata_columns.keys())
+            allowed_values = {col: set(str(v) for v in vals) for col, vals in strata_columns.items()}
+        elif isinstance(strata_columns, list):
+            # List format: ["column1", "column2"]
             cols_to_use = strata_columns
         elif strata_column:
+            # Backward compatible single column
             cols_to_use = [strata_column]
         else:
             raise ValueError("Either strata_column or strata_columns must be provided")
@@ -252,6 +265,17 @@ class SamplerService:
             for _, row in chunk.iterrows():
                 # Create composite stratum key from all columns
                 stratum_parts = [str(row.iloc[idx]) for idx in strata_col_indices]
+                
+                # Check if row matches allowed values filter (if specified)
+                if allowed_values:
+                    skip_row = False
+                    for col, idx in zip(cols_to_use, strata_col_indices):
+                        if col in allowed_values and str(row.iloc[idx]) not in allowed_values[col]:
+                            skip_row = True
+                            break
+                    if skip_row:
+                        continue
+                
                 stratum = "|".join(stratum_parts)
                 sampler.count_stratum(stratum)
 
@@ -261,6 +285,18 @@ class SamplerService:
         for chunk in parser.iter_rows(sheet_name):
             for _, row in chunk.iterrows():
                 stratum_parts = [str(row.iloc[idx]) for idx in strata_col_indices]
+                
+                # Check if row matches allowed values filter (if specified)
+                if allowed_values:
+                    skip_row = False
+                    for col, idx in zip(cols_to_use, strata_col_indices):
+                        if col in allowed_values and str(row.iloc[idx]) not in allowed_values[col]:
+                            skip_row = True
+                            break
+                    if skip_row:
+                        row_idx += 1
+                        continue
+                
                 stratum = "|".join(stratum_parts)
                 sampler.add(stratum, row_idx, row.tolist())
                 row_idx += 1

@@ -12,7 +12,7 @@ Models are organized into categories:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, Union
 from enum import Enum
 from datetime import datetime
 
@@ -65,8 +65,11 @@ class SamplingConfig(BaseModel):
     sample_size: int = Field(..., gt=0, description="Number of rows to sample")
     sample_percentage: Optional[float] = Field(None, ge=0.0, le=100.0, description="Percentage of rows to sample")
     random_seed: Optional[int] = Field(None, description="Seed for reproducibility")
-    strata_column: Optional[str] = Field(None, description="Single column for stratified sampling (deprecated, use strata_columns)")
-    strata_columns: Optional[list[str]] = Field(None, description="List of columns for multi-column stratified sampling")
+    strata_column: Optional[str] = Field(None, description="Single column for stratified sampling (deprecated)")
+    strata_columns: Optional[Union[list[str], dict[str, list[str]]]] = Field(
+        None, 
+        description="Multi-column stratified sampling. Can be a list of column names or a dict mapping column names to allowed values"
+    )
     interval: Optional[int] = Field(None, gt=0, description="Interval for systematic sampling")
     weight_column: Optional[str] = Field(None, description="Column for weighted sampling")
     cluster_column: Optional[str] = Field(None, description="Column for cluster sampling")
